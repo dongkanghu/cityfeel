@@ -28,9 +28,9 @@ type ConversationItem = {
 };
 
 const tabs: Array<{ key: Tab; label: string }> = [
-  { key: "friends", label: "好友" },
-  { key: "groups", label: "群聊" },
-  { key: "activities", label: "活动确认中" }
+  { key: "friends", label: "全部聊天" },
+  { key: "groups", label: "活动群聊" },
+  { key: "activities", label: "待确认活动" }
 ];
 
 function sourceLabel(source: string) {
@@ -111,7 +111,7 @@ export function FriendsPage() {
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="好友与聊天" subtitle="来自 1v1、群聊和卡片推荐" />
+      <TopBar title="聊天" subtitle="匹配后再进入沟通和活动确认" />
 
       <div className="grid grid-cols-3 gap-2 rounded-[1.25rem] bg-oatmeal p-1">
         {tabs.map((item) => (

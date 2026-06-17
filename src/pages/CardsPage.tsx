@@ -1,6 +1,6 @@
 import { Send, ThumbsDown } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AbstractAvatar } from "../components/common/AbstractAvatar";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
@@ -12,7 +12,7 @@ import { TopBar } from "../components/layout/TopBar";
 import { cardRecommendations } from "../data/mock";
 import { useDemoStore } from "../hooks/useDemoStore";
 
-const filters = ["全部", "高匹配", "适合咖啡", "适合聊天", "新推荐"];
+const filters = ["全部", "高匹配", "适合慢慢聊"];
 
 function statusText(status: string) {
   if (status === "request_sent") return "已发送，等待通过";
@@ -23,7 +23,6 @@ function statusText(status: string) {
 
 export function CardsPage() {
   const [filter, setFilter] = useState("全部");
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const {
     cardRequestStatusMap,
@@ -36,9 +35,9 @@ export function CardsPage() {
     return cardRecommendations.filter((user) => {
       const status = cardRequestStatusMap[user.id] ?? "default";
       if (filter === "高匹配") return user.matchScore >= 86 && status !== "ignored";
-      if (filter === "适合咖啡") return user.activityPreference.some((item) => item.includes("咖啡"));
-      if (filter === "适合聊天") return user.tags.some((tag) => tag.includes("慢热") || tag.includes("真诚"));
-      if (filter === "新推荐") return status === "default";
+      if (filter === "适合慢慢聊") {
+        return user.tags.some((tag) => tag.includes("慢热") || tag.includes("真诚"));
+      }
       return true;
     });
   }, [cardRequestStatusMap, filter]);
@@ -48,19 +47,18 @@ export function CardsPage() {
     showToast("好友申请已发送", "info");
     window.setTimeout(() => {
       acceptCardFriend(userId);
-      showToast("对方已通过你的好友申请");
-      navigate("/friends");
+      showToast("对方已通过，你可以继续看卡片或去聊天");
     }, 1200);
   };
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="AI 卡片推荐" subtitle="匿名卡片 · 好友申请默认自动通过" />
+      <TopBar title="可以先聊聊的人" subtitle="还不想立刻约见时，可以先轻量认识" />
 
       <Card className="space-y-2 bg-[#fffaf4]">
-        <h1 className="text-xl font-black text-ink">这些卡片基于你的匿名画像生成</h1>
+        <h1 className="text-xl font-black text-ink">每次只看少量适合轻量聊天的人</h1>
         <p className="text-sm leading-relaxed text-muted">
-          可向感兴趣的人发起好友申请，通过后即可聊天。Demo 中申请会自动通过。
+          这里不是刷人列表。AI 只保留与你的聊天节奏、咖啡偏好和边界感更接近的匿名卡片。
         </p>
       </Card>
 
@@ -148,6 +146,13 @@ export function CardsPage() {
                   <span className="sr-only">不感兴趣</span>
                 </Button>
               </div>
+              {status === "accepted" ? (
+                <Link to="/friends">
+                  <Button className="w-full" variant="secondary">
+                    去聊天
+                  </Button>
+                </Link>
+              ) : null}
             </Card>
           );
         })}

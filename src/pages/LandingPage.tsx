@@ -2,9 +2,8 @@ import {
   ArrowRight,
   BadgeCheck,
   Coffee,
-  MessageCircleHeart,
-  Sparkles,
-  UsersRound
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/common/Button";
@@ -15,19 +14,14 @@ import { useDemoStore } from "../hooks/useDemoStore";
 
 const featureCards = [
   {
-    icon: MessageCircleHeart,
-    title: "1v1 咖啡匹配",
-    text: "双方都同意后，自动成为好友，并进入集合地点确认。"
-  },
-  {
-    icon: UsersRound,
-    title: "多 v 多咖啡局",
-    text: "每周一次 3v3 低压力社交局，AI 推荐地点与活动流程。"
+    icon: ShieldCheck,
+    title: "匿名开始",
+    text: "不展示真实姓名和联系方式，首次见面默认选择公共场所。"
   },
   {
     icon: Sparkles,
-    title: "AI 卡片推荐",
-    text: "根据画像推荐匿名用户卡片，也支持 DIY 自己的匿名卡片。"
+    title: "少量推荐",
+    text: "先理解你的见面节奏，再给出少量更适合的本周选择。"
   }
 ];
 
@@ -38,7 +32,7 @@ export function LandingPage() {
 
   const jumpToDemo = () => {
     completeOnboarding();
-    showToast("已载入 Demo 画像，可直接查看本周匹配");
+    showToast("已载入示例画像，可快速预览本周计划");
     navigate("/home");
   };
 
@@ -51,16 +45,16 @@ export function LandingPage() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm font-black text-coffee">
               <Coffee className="h-4 w-4" />
-              CityFeel Demo
+              CityFeel
             </div>
             <StatusBadge tone="success">匿名模式</StatusBadge>
           </div>
           <div className="space-y-3">
             <h1 className="text-[2.15rem] font-black leading-tight text-ink">
-              让 AI 先理解你，再安排一杯刚刚好的咖啡
+              先回答几个问题，再看看适合你的匹配
             </h1>
             <p className="text-sm leading-relaxed text-muted">
-              匿名开始，通过几轮轻松对话生成你的社交画像。每周少量推荐适合你的咖啡活动、群组和潜在好友。
+              我们会根据你的见面节奏、聊天偏好和安全边界，推荐少量低压力线下匹配。
             </p>
           </div>
           <div className="grid gap-2">
@@ -69,10 +63,10 @@ export function LandingPage() {
               icon={<ArrowRight className="h-4 w-4" />}
               onClick={() => navigate("/onboarding")}
             >
-              开始 AI 建模
+              开始看看适合我的见面方式
             </Button>
-            <Button className="w-full" variant="secondary" onClick={jumpToDemo}>
-              直接查看 Demo 匹配
+            <Button className="w-full" variant="ghost" onClick={jumpToDemo}>
+              快速预览示例
             </Button>
           </div>
         </div>
@@ -98,7 +92,7 @@ export function LandingPage() {
       <Card className="flex items-start gap-3 bg-cream shadow-none">
         <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-moss" />
         <p className="text-xs leading-relaxed text-muted">
-          当前为产品 Demo，AI 对话和匹配均为模拟数据。仅面向成人用户，不展示真实姓名、联系方式或真人照片。
+          当前为产品演示，匹配和聊天均为示例数据。仅面向成人用户，不展示真实姓名、联系方式或真人照片。
         </p>
       </Card>
     </div>

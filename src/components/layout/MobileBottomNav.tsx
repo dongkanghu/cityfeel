@@ -1,13 +1,10 @@
-import { Coffee, Home, MessageCircle, Sparkles, UserRound } from "lucide-react";
+import { CalendarHeart, Sparkles } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../common/utils";
 
 const items = [
-  { label: "首页", path: "/home", icon: Home },
-  { label: "匹配", path: "/match/one-on-one", icon: Coffee, match: "/match" },
-  { label: "卡片", path: "/cards", icon: Sparkles },
-  { label: "好友", path: "/friends", icon: MessageCircle },
-  { label: "我的", path: "/profile", icon: UserRound }
+  { label: "本周", path: "/home", icon: CalendarHeart, match: "/match" },
+  { label: "画像", path: "/profile", icon: Sparkles, match: "/onboarding" }
 ];
 
 export function MobileBottomNav() {
@@ -15,12 +12,12 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[430px] border-t border-line bg-white/92 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_40px_rgba(69,49,33,0.10)] backdrop-blur-xl">
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-2 gap-2">
         {items.map((item) => {
           const Icon = item.icon;
-          const active = item.match
-            ? location.pathname.startsWith(item.match)
-            : location.pathname === item.path;
+          const active =
+            location.pathname === item.path ||
+            Boolean(item.match && location.pathname.startsWith(item.match));
           return (
             <NavLink
               key={item.path}

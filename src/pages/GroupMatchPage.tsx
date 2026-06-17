@@ -72,7 +72,7 @@ export function GroupMatchPage() {
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="多 v 多活动匹配" subtitle="北京 · 3v3 咖啡轻社交局" />
+      <TopBar title="小组活动匹配" subtitle="北京 · 3v3 咖啡轻社交局" />
 
       <Card className="space-y-4 bg-[#fffaf4]">
         <div className="flex items-start justify-between gap-3">

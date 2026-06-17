@@ -1,18 +1,24 @@
-import { ArrowLeft, ArrowRight, Bot, FileText, Keyboard, SendHorizonal, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  FileText,
+  MessageCircle,
+  SendHorizonal,
+  Sparkles
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
 import { TagChip } from "../components/common/TagChip";
 import { useToast } from "../components/common/Toast";
-import { ProgressCard } from "../components/match/ProgressCard";
 import {
   aiChatPresets,
   currentUser,
   defaultProfileTags,
   onboardingScript,
   profileSummary,
-  profileReportSections,
   type ChatMessage
 } from "../data/mock";
 import { useDemoStore } from "../hooks/useDemoStore";
@@ -34,7 +40,7 @@ function pickAiReply(input: string) {
     id: "fallback",
     input,
     response:
-      "我会把这条回答记录为你的个性化线索。Demo 版本不会调用真实 AI，但会根据关键词把它映射到聊天节奏、活动偏好和边界感画像中。",
+      "我会把这条回答记录为你的个性化线索，并用来判断更适合你的聊天节奏、活动方式和安全边界。",
     tags: ["个性化线索", "画像补充"]
   };
 }
@@ -121,11 +127,11 @@ export function OnboardingPage() {
             conversationId: "onboarding",
             sender: "ai",
             content:
-              "选择题已完成。接下来你可以用问答方式补充更多线索。Demo 里聊天框使用固定素材：按 Tab 可快速填入准备好的回答，然后点击发送。",
+              "我已经有了初步判断。接下来你可以再补充一点见面偏好：不知道怎么写也没关系，点一个下方示例即可。",
             createdAt: "刚刚"
           }
         ]);
-        showToast("已进入 AI 问答建模阶段", "info");
+        showToast("可以继续补充见面偏好", "info");
       }
       setIsThinking(false);
     }, 650);
@@ -183,11 +189,11 @@ export function OnboardingPage() {
         id: `onboarding_report_${Date.now()}`,
         conversationId: "onboarding",
         sender: "ai",
-        content: "用户画像报告已生成。你可以查看报告摘要，也可以进入本周匹配。",
+        content: "我已经形成了初步理解。你可以确认摘要，也可以去看本周计划。",
         createdAt: "刚刚"
       }
     ]);
-    showToast("用户画像报告已生成");
+    showToast("AI 对你的理解已更新");
   };
 
   const enterHome = () => {
@@ -201,24 +207,29 @@ export function OnboardingPage() {
         <button
           className="grid h-10 w-10 place-items-center rounded-full bg-white text-muted shadow-sm"
           onClick={() => navigate("/")}
-          aria-label="返回首页"
+          aria-label="返回入口页"
           type="button"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 text-center">
-          <p className="text-xs font-bold text-coffee">北京 · 咖啡偏好建模</p>
-          <h1 className="truncate text-lg font-black text-ink">AI 正在了解你</h1>
+          <p className="text-xs font-bold text-coffee">北京 · 低压力见面</p>
+          <h1 className="truncate text-lg font-black text-ink">先了解你的见面偏好</h1>
         </div>
         <div className="h-10 w-10" />
       </div>
 
-      <ProgressCard progress={profileProgress} tags={visibleTags} />
+      <PreferenceProgress
+        phase={phase}
+        stepIndex={stepIndex}
+        chatTurnCount={chatTurnCount}
+        tags={visibleTags}
+      />
 
       <Card className="space-y-3 bg-[#fffaf4]">
         <div className="flex items-center gap-2 text-sm font-black text-coffee">
           <Bot className="h-4 w-4" />
-          AI 对话建模
+          AI 了解中
         </div>
         <div className="space-y-3">
           {messages.map((message) => {
@@ -239,7 +250,7 @@ export function OnboardingPage() {
           })}
           {isThinking ? (
             <div className="inline-flex rounded-full bg-white px-3 py-2 text-xs text-muted">
-              AI 正在生成标签...
+              AI 正在整理偏好...
             </div>
           ) : null}
         </div>
@@ -266,11 +277,11 @@ export function OnboardingPage() {
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-coffee">
-                <Keyboard className="h-4 w-4" />
-                <h2 className="text-base font-black">固定素材问答</h2>
+                <MessageCircle className="h-4 w-4" />
+                <h2 className="text-base font-black">补充一点见面偏好</h2>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                按 Tab 轮流填入准备好的内容；也可以点击下方素材。发送后 AI 会按内容返回对应 mock 回复。
+                可以选一个话题，也可以自己写一句。聊得越多，推荐越准。
               </p>
             </div>
             <StatusPill count={chatTurnCount} />
@@ -284,7 +295,7 @@ export function OnboardingPage() {
                 variant="secondary"
                 onClick={() => setDraft(preset.input)}
               >
-                {preset.tags[0]}
+                {preset.tags[0].replace("咖啡后散步", "咖啡后走走")}
               </Button>
             ))}
           </div>
@@ -303,11 +314,11 @@ export function OnboardingPage() {
                   sendChat();
                 }
               }}
-              placeholder="按 Tab 填入下一条预设回答，再点击发送"
+              placeholder="写一句你的见面偏好，或点下方示例"
             />
             <div className="flex items-center justify-between gap-2 px-1 pb-1">
               <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={fillNextPreset}>
-                Tab 填入
+                换个示例
               </Button>
               <Button
                 className="min-h-9 px-3 text-xs"
@@ -327,7 +338,7 @@ export function OnboardingPage() {
             disabled={chatTurnCount < 2 || isThinking}
             onClick={generateReport}
           >
-            {chatTurnCount < 2 ? "至少完成 2 轮问答后生成报告" : "生成用户画像报告"}
+            {chatTurnCount < 2 ? "再补充一点后查看理解" : "查看 AI 对我的理解"}
           </Button>
         </Card>
       ) : null}
@@ -336,7 +347,7 @@ export function OnboardingPage() {
         <Card className="space-y-4 border-coffee/20 bg-white">
           <div className="flex items-center gap-2 text-coffee">
             <Sparkles className="h-4 w-4" />
-            <h2 className="text-base font-black">用户画像报告</h2>
+            <h2 className="text-base font-black">AI 对你的理解</h2>
           </div>
           <div>
             <p className="text-xs font-semibold text-muted">匿名昵称</p>
@@ -344,15 +355,19 @@ export function OnboardingPage() {
           </div>
           <p className="text-sm leading-relaxed text-muted">{profileSummary}</p>
           <div className="grid gap-2">
-            {profileReportSections.map((section) => (
-              <div key={section.title} className="rounded-[1.2rem] bg-cream p-3">
-                <p className="text-sm font-black text-ink">{section.title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{section.content}</p>
+            {[
+              ["见面方式", "低压力、60-90 分钟，从安静咖啡聊天开始。"],
+              ["推荐场景", "安静空间 / 咖啡后轻散步 / 小范围活动。"],
+              ["安全偏好", "公共场所，先不交换私人联系方式。"]
+            ].map(([title, content]) => (
+              <div key={title} className="rounded-[1.2rem] bg-cream p-3">
+                <p className="text-sm font-black text-ink">{title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">{content}</p>
               </div>
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            {(visibleTags.length > 0 ? visibleTags : defaultProfileTags).map((tag) => (
+            {(visibleTags.length > 0 ? visibleTags : defaultProfileTags).slice(0, 5).map((tag) => (
               <TagChip key={tag} tone="coffee">
                 {tag}
               </TagChip>
@@ -363,11 +378,70 @@ export function OnboardingPage() {
             icon={<ArrowRight className="h-4 w-4" />}
             onClick={enterHome}
           >
-            进入我的匹配
+            去看本周计划
           </Button>
         </Card>
       ) : null}
     </div>
+  );
+}
+
+function PreferenceProgress({
+  phase,
+  stepIndex,
+  chatTurnCount,
+  tags
+}: {
+  phase: OnboardingPhase;
+  stepIndex: number;
+  chatTurnCount: number;
+  tags: string[];
+}) {
+  const copy =
+    phase === "choices"
+      ? {
+          title: `还差 ${Math.max(0, choiceSteps.length - stepIndex)} 个问题`,
+          progress: stepIndex === 0 ? 18 : 42,
+          note: "这个问题会帮助我们判断适合你的见面节奏。"
+        }
+      : phase === "chat"
+        ? {
+            title: `已补充 ${chatTurnCount}/2 条偏好`,
+            progress: Math.min(74, 42 + chatTurnCount * 16),
+            note: "可以继续聊天，也可以在两轮后查看 AI 对你的理解。"
+          }
+        : {
+            title: "已形成初步理解",
+            progress: 82,
+            note: "你可以随时回来补充，推荐会继续变准。"
+          };
+
+  return (
+    <Card className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-coffee">偏好进度</p>
+          <h2 className="truncate text-lg font-black text-ink">{copy.title}</h2>
+        </div>
+        <span className="shrink-0 text-2xl font-black text-ink">{copy.progress}%</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-oatmeal">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-coffee via-latte to-sage transition-all duration-500"
+          style={{ width: `${copy.progress}%` }}
+        />
+      </div>
+      <p className="text-xs leading-relaxed text-muted">{copy.note}</p>
+      {tags.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {tags.slice(0, 3).map((tag, index) => (
+            <TagChip key={`${tag}-${index}`} tone={index % 2 ? "sage" : "coffee"}>
+              {tag}
+            </TagChip>
+          ))}
+        </div>
+      ) : null}
+    </Card>
   );
 }
 

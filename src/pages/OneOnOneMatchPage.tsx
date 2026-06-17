@@ -1,5 +1,6 @@
 import { Coffee, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
 import { Modal } from "../components/common/Modal";
@@ -34,6 +35,7 @@ function statusLabel(status: string) {
 }
 
 export function OneOnOneMatchPage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,6 +90,39 @@ export function OneOnOneMatchPage() {
     showToast("活动已确认，你可以在好友页继续沟通细节");
   };
 
+  const primaryButton = (() => {
+    if (oneOnOneStatus === "waiting_other") {
+      return {
+        label: "已同意，等待对方确认",
+        disabled: true,
+        loading: true,
+        onClick: () => undefined
+      };
+    }
+    if (oneOnOneStatus === "activity_confirming") {
+      return {
+        label: "确认时间和集合地点",
+        disabled: false,
+        loading: false,
+        onClick: () => setConfirmOpen(true)
+      };
+    }
+    if (oneOnOneStatus === "confirmed") {
+      return {
+        label: "进入聊天",
+        disabled: false,
+        loading: false,
+        onClick: () => navigate("/friends")
+      };
+    }
+    return {
+      label: "愿意见一面",
+      disabled: false,
+      loading,
+      onClick: agree
+    };
+  })();
+
   return (
     <div className="space-y-4 pt-1">
       <TopBar title="1v1 咖啡活动匹配" subtitle="北京 · 每周一次低压力推荐" />
@@ -128,21 +163,18 @@ export function OneOnOneMatchPage() {
         <div className="grid gap-2">
           <Button
             className="w-full"
-            loading={loading}
-            disabled={oneOnOneStatus === "confirmed"}
+            loading={primaryButton.loading}
+            disabled={primaryButton.disabled}
             icon={<Coffee className="h-4 w-4" />}
-            onClick={agree}
+            onClick={primaryButton.onClick}
           >
-            {oneOnOneStatus === "confirmed"
-              ? "本次活动已确认"
-              : oneOnOneStatus === "activity_confirming"
-                ? "双方已同意"
-                : "同意本次匹配"}
+            {primaryButton.label}
           </Button>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
               icon={<EyeOff className="h-4 w-4" />}
+              disabled={oneOnOneStatus !== "recommended" && oneOnOneStatus !== "skipped"}
               onClick={() => {
                 skipOneOnOne();
                 showToast("已记录暂时跳过，仍可稍后重新同意", "info");
@@ -193,6 +225,23 @@ export function OneOnOneMatchPage() {
 
       {canChat ? (
         <>
+          <Card className="space-y-3">
+            <h2 className="text-base font-black text-ink">当前进度</h2>
+            <div className="grid grid-cols-4 gap-1 text-center text-[11px] font-semibold text-muted">
+              {["已成为好友", "确认地点", "确认活动", "活动当天"].map((step, index) => (
+                <div
+                  key={step}
+                  className={`rounded-2xl px-1.5 py-2 ${
+                    oneOnOneStatus === "confirmed" || index < 2
+                      ? "bg-[#e4f2ea] text-[#2f6d50]"
+                      : "bg-cream"
+                  }`}
+                >
+                  {step}
+                </div>
+              ))}
+            </div>
+          </Card>
           <ChatPanel
             title="集合地点沟通"
             subtitle={

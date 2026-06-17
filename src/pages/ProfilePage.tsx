@@ -1,5 +1,6 @@
 import { RotateCcw, Save, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AbstractAvatar } from "../components/common/AbstractAvatar";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
@@ -63,13 +64,16 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="我的匿名画像" subtitle="北京 · DIY 推荐卡片" />
+      <TopBar title="画像" subtitle="让 AI 更懂你，也管理别人看到的卡片" />
 
       <Card className="space-y-4 bg-[#fffaf4]">
         <div className="flex items-start gap-3">
           <AbstractAvatar seed={currentUser.avatarSeed} label={preview.alias} size="xl" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-coffee">AI 生成画像</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold text-coffee">推荐偏好</p>
+              <StatusBadge tone="quiet">仅用于推荐</StatusBadge>
+            </div>
             <h1 className="mt-1 text-2xl font-black text-ink">{currentUser.alias}</h1>
             <p className="mt-1 text-sm text-muted">城市：北京 · 用户均为成人</p>
           </div>
@@ -88,21 +92,28 @@ export function ProfilePage() {
         </div>
         <p className="text-sm leading-relaxed text-muted">{profileSummary}</p>
         <div className="flex flex-wrap gap-2">
-          {(selectedProfileTags.length ? selectedProfileTags : currentUser.tags).map((tag) => (
-            <TagChip key={tag} tone="coffee">
-              {tag}
-            </TagChip>
-          ))}
+          {(selectedProfileTags.length ? selectedProfileTags : currentUser.tags)
+            .slice(0, 5)
+            .map((tag) => (
+              <TagChip key={tag} tone="coffee">
+                {tag}
+              </TagChip>
+            ))}
         </div>
+        <Link to="/onboarding">
+          <Button className="w-full" variant="secondary">
+            继续补充偏好
+          </Button>
+        </Link>
       </Card>
 
       <Card className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold text-muted">我的匿名卡片预览</p>
+            <p className="text-xs font-semibold text-muted">公开卡片预览</p>
             <h2 className="mt-1 text-xl font-black text-ink">{preview.alias || "未命名"}</h2>
           </div>
-          <StatusBadge tone="success">匿名优先</StatusBadge>
+          <StatusBadge tone="success">别人可见</StatusBadge>
         </div>
         <p className="text-sm leading-relaxed text-ink">{preview.bio}</p>
         <div className="flex flex-wrap gap-2">
@@ -121,9 +132,9 @@ export function ProfilePage() {
       </Card>
 
       <Card className="space-y-3">
-        <h2 className="text-base font-black text-ink">DIY 编辑</h2>
+        <h2 className="text-base font-black text-ink">编辑公开卡片</h2>
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">匿名昵称</span>
+          <span className="text-xs font-semibold text-muted">匿名昵称 · 别人可见</span>
           <input
             className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
             value={alias}
@@ -131,7 +142,7 @@ export function ProfilePage() {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">一句话介绍</span>
+          <span className="text-xs font-semibold text-muted">一句话介绍 · 别人可见</span>
           <textarea
             className="min-h-20 w-full resize-none rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
             value={bio}
@@ -139,7 +150,7 @@ export function ProfilePage() {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">我的 3-5 个标签</span>
+          <span className="text-xs font-semibold text-muted">我的 3-5 个标签 · 别人可见</span>
           <input
             className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
             value={tags}
@@ -148,7 +159,7 @@ export function ProfilePage() {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">偏好咖啡活动</span>
+          <span className="text-xs font-semibold text-muted">偏好咖啡活动 · 用于推荐</span>
           <input
             className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
             value={activityPreference}
@@ -157,7 +168,7 @@ export function ProfilePage() {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">不希望被如何介绍</span>
+          <span className="text-xs font-semibold text-muted">不希望被如何介绍 · 仅用于推荐</span>
           <textarea
             className="min-h-20 w-full resize-none rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
             value={avoidIntro}
