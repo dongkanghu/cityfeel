@@ -1,10 +1,11 @@
 import { SendHorizonal } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { ChatMessage } from "../../data/mock";
 import { Button } from "../common/Button";
 import { Card } from "../common/Card";
 import { ChatBubble } from "./ChatBubble";
 import { QuickReplies } from "./QuickReplies";
+import { cn } from "../common/utils";
 
 type ChatPanelProps = {
   title: string;
@@ -13,6 +14,10 @@ type ChatPanelProps = {
   senderLabels?: Record<string, string>;
   quickReplies?: string[];
   placeholder?: string;
+  topSlot?: ReactNode;
+  showHeader?: boolean;
+  className?: string;
+  messagesClassName?: string;
   onSend: (content: string) => void;
 };
 
@@ -23,6 +28,10 @@ export function ChatPanel({
   senderLabels = {},
   quickReplies = [],
   placeholder = "输入一条消息",
+  topSlot,
+  showHeader = true,
+  className,
+  messagesClassName,
   onSend
 }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
@@ -35,14 +44,22 @@ export function ChatPanel({
   };
 
   return (
-    <Card className="space-y-3 p-3">
-      <div className="flex items-center justify-between gap-2 px-1">
-        <div className="min-w-0">
-          <h2 className="truncate text-sm font-black text-ink">{title}</h2>
-          {subtitle ? <p className="text-xs text-muted">{subtitle}</p> : null}
+    <Card className={cn("space-y-3 p-3", className)}>
+      {showHeader ? (
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-black text-ink">{title}</h2>
+            {subtitle ? <p className="text-xs text-muted">{subtitle}</p> : null}
+          </div>
         </div>
-      </div>
-      <div className="max-h-[430px] min-h-[260px] space-y-3 overflow-y-auto rounded-[1.25rem] bg-cream/70 p-3">
+      ) : null}
+      {topSlot}
+      <div
+        className={cn(
+          "max-h-[430px] min-h-[260px] space-y-3 overflow-y-auto rounded-[1.25rem] bg-cream/70 p-3",
+          messagesClassName
+        )}
+      >
         {messages.length === 0 ? (
           <div className="grid h-40 place-items-center text-center text-sm text-muted">
             暂无消息，发送第一条咖啡话题吧。

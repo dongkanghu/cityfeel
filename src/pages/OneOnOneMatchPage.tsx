@@ -112,7 +112,7 @@ export function OneOnOneMatchPage() {
         label: "进入聊天",
         disabled: false,
         loading: false,
-        onClick: () => navigate("/friends")
+        onClick: () => navigate("/chat")
       };
     }
     return {
@@ -131,7 +131,7 @@ export function OneOnOneMatchPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold text-coffee">本周 1v1 咖啡匹配</p>
-            <h1 className="mt-1 text-2xl font-black text-ink">胡同回声</h1>
+            <h1 className="mt-1 text-2xl font-black text-ink">{oneOnOneUser.alias}</h1>
             <p className="mt-1 text-sm text-muted">周六下午咖啡聊天 · 匹配度 91%</p>
           </div>
           <StatusBadge

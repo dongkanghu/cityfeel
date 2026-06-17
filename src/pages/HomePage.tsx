@@ -1,24 +1,31 @@
 import {
-  CalendarClock,
   ChevronRight,
   Coffee,
   History,
   Info,
   MessageCircle,
   ShieldCheck,
-  Sparkles,
   UsersRound
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AbstractAvatar } from "../components/common/AbstractAvatar";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
+import { GatheringOptionCard } from "../components/gatherings/GatheringOptionCard";
 import { Modal } from "../components/common/Modal";
 import { StatusBadge } from "../components/common/StatusBadge";
 import { TagChip } from "../components/common/TagChip";
 import { useToast } from "../components/common/Toast";
 import { TopBar } from "../components/layout/TopBar";
-import { cardRecommendations, currentUser, oneOnOneUser } from "../data/mock";
+import {
+  cardRecommendations,
+  currentUser,
+  initialOneOnOneMessages,
+  oneOnOneConversationId,
+  oneOnOneUser,
+  type UserCard
+} from "../data/mock";
 import { useDemoStore } from "../hooks/useDemoStore";
 
 function planStatusLabel(status: string, onboardingCompleted: boolean) {
@@ -29,20 +36,18 @@ function planStatusLabel(status: string, onboardingCompleted: boolean) {
   return "待确认推荐";
 }
 
-function primaryAction(status: string, onboardingCompleted: boolean) {
-  if (!onboardingCompleted) {
-    return { label: "先回答几个问题", to: "/onboarding", disabled: false };
-  }
-  if (status === "waiting_other") {
-    return { label: "已同意，等待对方确认", to: "/match/one-on-one", disabled: true };
-  }
-  if (status === "activity_confirming") {
-    return { label: "确认时间和集合地点", to: "/match/one-on-one", disabled: false };
-  }
-  if (status === "confirmed") {
-    return { label: "进入聊天", to: "/friends", disabled: false };
-  }
-  return { label: "查看并确认", to: "/match/one-on-one", disabled: false };
+function groupStatusLabel(status: string) {
+  if (status === "confirmed") return "活动已确认";
+  if (status === "planning") return "地点投票中";
+  if (status === "joined") return "已加入";
+  return "可加入";
+}
+
+function acceptLabel(status: string) {
+  if (status === "waiting_other") return "等待确认";
+  if (status === "activity_confirming") return "已接受";
+  if (status === "confirmed") return "已确认";
+  return "接受";
 }
 
 export function HomePage() {
@@ -56,27 +61,60 @@ export function HomePage() {
     onboardingCompleted,
     oneOnOneStatus,
     groupStatus,
-    cardRequestStatusMap
+    cardRequestStatusMap,
+    chats,
+    startOneOnOneWaiting,
+    resolveOneOnOneAccepted,
+    skipOneOnOne
   } = useDemoStore();
-  const action = primaryAction(oneOnOneStatus, onboardingCompleted);
   const newCards = cardRecommendations.filter(
     (user) => cardRequestStatusMap[user.id] === "default"
   ).length;
   const progress = onboardingCompleted ? profileProgress : 24;
   const tags = (selectedProfileTags.length ? selectedProfileTags : currentUser.tags).slice(0, 3);
+  const oneOnOneMessages = chats[oneOnOneConversationId] ?? initialOneOnOneMessages;
+  const lastOneOnOneMessage = oneOnOneMessages[oneOnOneMessages.length - 1];
+  const weeklyUsers = [oneOnOneUser, ...cardRecommendations.slice(0, 2)];
+
+  const acceptOneOnOne = () => {
+    if (!onboardingCompleted) {
+      navigate("/onboarding");
+      return;
+    }
+    if (oneOnOneStatus !== "recommended" && oneOnOneStatus !== "skipped") {
+      showToast("本周 1v1 推荐已进入下一阶段", "info");
+      return;
+    }
+
+    startOneOnOneWaiting();
+    showToast("已接受本周 1v1 推荐，正在等待对方确认", "info");
+    window.setTimeout(() => {
+      resolveOneOnOneAccepted();
+      showToast("对方已通过，详情页可继续确认地点");
+    }, 1000);
+  };
+
+  const rejectOneOnOne = () => {
+    if (oneOnOneStatus !== "recommended" && oneOnOneStatus !== "skipped") {
+      showToast("当前阶段不能拒绝该推荐", "info");
+      return;
+    }
+    skipOneOnOne();
+    showToast("已拒绝本周 1v1 推荐", "info");
+  };
 
   return (
     <div className="space-y-4 pt-1">
       <TopBar
-        title="本周"
-        subtitle="北京 · 本周匹配计划"
+        title="聚会"
+        subtitle="1v1 与 3v3 聚会都从这里进入"
         right={
           <div className="flex items-center gap-2">
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-full bg-white text-muted shadow-sm"
               aria-label="查看历史和聊天"
-              onClick={() => navigate("/friends")}
+              onClick={() => navigate("/chat")}
             >
               <History className="h-4 w-4" />
             </button>
@@ -92,13 +130,13 @@ export function HomePage() {
         }
       />
 
-      <Card className="space-y-4 overflow-hidden bg-[#fffaf4]">
+      <Card className="space-y-3 overflow-hidden bg-[#fffaf4]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-coffee">你今天只需要做一件事</p>
-            <h1 className="mt-1 text-2xl font-black leading-tight text-ink">
+            <h1 className="mt-1 text-xl font-black leading-tight text-ink">
               {onboardingCompleted
-                ? "确认本周 1v1 匹配推荐"
+                ? "本周 1v1 推荐"
                 : "先让 AI 了解你的见面偏好"}
             </h1>
           </div>
@@ -107,38 +145,18 @@ export function HomePage() {
           </StatusBadge>
         </div>
 
-        <div className="rounded-[1.35rem] border border-line bg-white p-3">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
-              <TagChip tone="coffee">低压力</TagChip>
-              <TagChip tone="sage">少量推荐</TagChip>
-              <TagChip tone="plain">匿名开始</TagChip>
-            </div>
-            <span className="shrink-0 text-xs font-bold text-muted">北京</span>
-          </div>
-          <div className="grid gap-2 text-sm text-muted">
-            <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-coffee" />
-              <span>周二 24:00 截止，周三 20:00 出结果</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1 text-center text-[11px] font-semibold">
-              {["了解偏好", "本周推荐", "确认安排", "见面反馈"].map((step) => (
-                <div key={step} className="rounded-full bg-cream px-1.5 py-1 text-muted">
-                  {step}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {onboardingCompleted ? (
-          <div className="rounded-[1.35rem] bg-cream p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-muted">本周推荐对象</p>
-                <p className="mt-1 text-lg font-black text-ink">{oneOnOneUser.alias}</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted">
-                  你们都偏好安静环境、低压力聊天和清楚边界。建议从周六下午一杯咖啡开始。
+          <div className="rounded-[1.2rem] bg-white/82 p-3">
+            <div className="flex items-center gap-3">
+              <AbstractAvatar
+                seed={oneOnOneUser.avatarSeed}
+                label={oneOnOneUser.alias}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-black text-ink">{oneOnOneUser.alias}</p>
+                <p className="mt-0.5 truncate text-xs text-muted">
+                  最后消息：{lastOneOnOneMessage?.content ?? "等待双方确认"}
                 </p>
               </div>
               <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-black text-coffee">
@@ -152,18 +170,82 @@ export function HomePage() {
           </div>
         )}
 
-        <Button
-          className="w-full justify-between"
-          disabled={action.disabled}
-          icon={<ChevronRight className="h-4 w-4" />}
-          onClick={() => navigate(action.to)}
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <Button
+            className="min-h-10 rounded-xl text-xs"
+            disabled={oneOnOneStatus === "waiting_other" || oneOnOneStatus === "confirmed"}
+            onClick={acceptOneOnOne}
+          >
+            {acceptLabel(oneOnOneStatus)}
+          </Button>
+          <Button
+            className="min-h-10 rounded-xl text-xs"
+            variant="secondary"
+            disabled={oneOnOneStatus !== "recommended" && oneOnOneStatus !== "skipped"}
+            onClick={rejectOneOnOne}
+          >
+            拒绝
+          </Button>
+          <Button
+            className="min-h-10 rounded-xl px-3 text-xs"
+            variant="outline"
+            icon={<ChevronRight className="h-4 w-4" />}
+            onClick={() => navigate("/match/one-on-one")}
+          >
+            详情
+          </Button>
+        </div>
+        <button
+          type="button"
+          className="w-full text-center text-xs font-bold text-muted"
+          onClick={() => setSignupOpen(true)}
         >
-          {action.label}
-        </Button>
-        <Button className="w-full" variant="ghost" onClick={() => setSignupOpen(true)}>
           调整本周意愿
-        </Button>
+        </button>
       </Card>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-black text-ink">本周用户卡片</h2>
+          <span className="text-xs font-semibold text-muted">匿名头像</span>
+        </div>
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+          {weeklyUsers.map((user, index) => (
+            <CompactUserCard
+              key={user.id}
+              user={user}
+              badge={index === 0 ? "1v1" : "卡片"}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-black text-ink">选择聚会方式</h2>
+          <span className="text-xs font-semibold text-muted">本周推荐</span>
+        </div>
+        <GatheringOptionCard
+          title="1v1 咖啡"
+          subtitle="适合想先和一个人低压力确认时间、地点和聊天节奏。"
+          status={planStatusLabel(oneOnOneStatus, onboardingCompleted)}
+          to="/match/one-on-one"
+          icon={<Coffee className="h-5 w-5" />}
+          score="91%"
+          tags={["安静聊天", "60-90 分钟", "边界清楚"]}
+          tone={oneOnOneStatus === "confirmed" ? "success" : "waiting"}
+        />
+        <GatheringOptionCard
+          title="3v3 咖啡局"
+          subtitle="适合想降低单独见面压力，先在小组里自然认识。"
+          status={groupStatusLabel(groupStatus)}
+          to="/match/group"
+          icon={<UsersRound className="h-5 w-5" />}
+          score="88%"
+          tags={["小组活动", "地点投票", "轻破冰"]}
+          tone={groupStatus === "confirmed" ? "success" : "ready"}
+        />
+      </section>
 
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -203,10 +285,8 @@ export function HomePage() {
           >
             <UsersRound className="h-5 w-5 shrink-0 text-coffee" />
             <div className="min-w-0 flex-1">
-              <p className="font-black text-ink">看看小组匹配</p>
-              <p className="text-xs text-muted">
-                {groupStatus === "available" ? "适合不想单独见面的人" : "已加入本周小组活动"}
-              </p>
+              <p className="font-black text-ink">查看小组详情</p>
+              <p className="text-xs text-muted">成员、地点投票和活动流程</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted" />
           </Link>
@@ -278,6 +358,28 @@ function PreferenceBlock({ title, items }: { title: string; items: string[] }) {
         {items.map((item, index) => (
           <TagChip key={item} tone={index === 0 ? "coffee" : "plain"}>
             {item}
+          </TagChip>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompactUserCard({ user, badge }: { user: UserCard; badge: string }) {
+  return (
+    <div className="w-[168px] shrink-0 rounded-[1.25rem] border border-line bg-white/92 p-3 shadow-soft">
+      <div className="flex items-start justify-between gap-2">
+        <AbstractAvatar seed={user.avatarSeed} label={user.alias} size="sm" />
+        <StatusBadge tone={badge === "1v1" ? "ready" : "quiet"}>{badge}</StatusBadge>
+      </div>
+      <p className="mt-3 truncate text-sm font-black text-ink">{user.alias}</p>
+      <p className="mt-1 line-clamp-2 min-h-8 text-xs leading-relaxed text-muted">
+        {user.bio}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {user.tags.slice(0, 2).map((tag, index) => (
+          <TagChip key={tag} tone={index === 0 ? "coffee" : "plain"}>
+            {tag}
           </TagChip>
         ))}
       </div>

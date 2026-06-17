@@ -147,7 +147,7 @@ export function CardsPage() {
                 </Button>
               </div>
               {status === "accepted" ? (
-                <Link to="/friends">
+                <Link to="/chat">
                   <Button className="w-full" variant="secondary">
                     去聊天
                   </Button>

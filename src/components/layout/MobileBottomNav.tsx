@@ -1,9 +1,16 @@
-import { CalendarHeart, Sparkles } from "lucide-react";
+import { Coffee, MessageCircle, Sparkles } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../common/utils";
 
 const items = [
-  { label: "本周", path: "/home", icon: CalendarHeart, match: "/match" },
+  { label: "聊天", path: "/chat", icon: MessageCircle, match: "/friends" },
+  {
+    label: "聚会",
+    path: "/gatherings",
+    icon: Coffee,
+    match: "/match",
+    aliases: ["/home"]
+  },
   { label: "画像", path: "/profile", icon: Sparkles, match: "/onboarding" }
 ];
 
@@ -12,11 +19,12 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[430px] border-t border-line bg-white/92 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_40px_rgba(69,49,33,0.10)] backdrop-blur-xl">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-1.5">
         {items.map((item) => {
           const Icon = item.icon;
           const active =
             location.pathname === item.path ||
+            item.aliases?.includes(location.pathname) ||
             Boolean(item.match && location.pathname.startsWith(item.match));
           return (
             <NavLink

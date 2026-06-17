@@ -223,7 +223,7 @@ export const profileReportSections: ProfileReportSection[] = [
 
 export const oneOnOneUser: UserCard = {
   id: "u_hutong_echo",
-  alias: "胡同回声",
+  alias: "测试用户1",
   ageRange: "25-29",
   city: "北京",
   avatarSeed: "hutong-echo",
@@ -239,7 +239,7 @@ export const oneOnOneUser: UserCard = {
 export const cardRecommendations: UserCard[] = [
   {
     id: "u_orange_americano",
-    alias: "橘子冰美式",
+    alias: "测试用户2",
     ageRange: "25-29",
     city: "北京",
     avatarSeed: "orange-americano",
@@ -253,7 +253,7 @@ export const cardRecommendations: UserCard[] = [
   },
   {
     id: "u_north_letter",
-    alias: "北岛来信",
+    alias: "测试用户3",
     ageRange: "25-29",
     city: "北京",
     avatarSeed: "north-letter",
@@ -267,7 +267,7 @@ export const cardRecommendations: UserCard[] = [
   },
   {
     id: "u_weekend_cappu",
-    alias: "周末卡布",
+    alias: "测试用户4",
     ageRange: "25-29",
     city: "北京",
     avatarSeed: "weekend-cappu",
@@ -313,7 +313,7 @@ export const groupMembers: UserCard[] = [
   },
   {
     id: "u_slow_star",
-    alias: "慢半拍星人",
+    alias: "测试用户5",
     ageRange: "25-29",
     city: "北京",
     avatarSeed: "slow-star",
