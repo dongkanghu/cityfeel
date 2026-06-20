@@ -6,7 +6,7 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const fullScreenRoutes = new Set(["/", "/onboarding"]);
+const fullScreenRoutes = new Set(["/onboarding"]);
 
 export function AppShell({ children }: AppShellProps) {
   const location = useLocation();

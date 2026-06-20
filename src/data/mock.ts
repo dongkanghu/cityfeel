@@ -438,3 +438,54 @@ export const safetyNotes = [
   "首次见面建议选择公共场所，并保留可自由离开的安排。",
   "举报、屏蔽和不感兴趣入口在 Demo 中会记录为本地反馈。"
 ];
+
+export type CreditEvent = {
+  id: string;
+  delta: number;
+  reason: string;
+  createdAt: string;
+};
+
+export const initialCreditScore = 100;
+
+export const creditEventsSeed: CreditEvent[] = [
+  { id: "ce_seed_1", delta: 5, reason: "完成 1v1 咖啡见面", createdAt: "上周日" },
+  { id: "ce_seed_2", delta: 2, reason: "提前 24 小时确认行程", createdAt: "上周五" },
+  { id: "ce_seed_3", delta: -3, reason: "迟到 10 分钟", createdAt: "上上周六" }
+];
+
+export const personaTopicPool = [
+  "最近什么事情让你觉得开心？",
+  "你心目中理想的周末是什么样？",
+  "聊聊你最近循环的一首歌或一部剧？",
+  "工作或学习里，哪件事让你最有成就感？",
+  "你希望和什么样的人在一起会觉得自在？",
+  "如果一个晚上完全空闲，你想做什么？",
+  "你怎么定义一段好的关系？",
+  "最近一次让你觉得被理解的瞬间？",
+  "你更在意一个人的什么特质？",
+  "你不喜欢被怎样对待？",
+  "和陌生人见面前你通常在想什么？",
+  "如果可以重来一次，你最想改变哪一个习惯？"
+];
+
+export const personaConversationId = "conv_persona_ai";
+
+export const personaSeedMessages: ChatMessage[] = [
+  {
+    id: "m_persona_intro",
+    conversationId: personaConversationId,
+    sender: "ai",
+    content:
+      "你好，我是你的 AI 搭子。我们可以慢慢聊，让我更了解你。聊得越深，下面的匹配也会越准。",
+    createdAt: "刚刚"
+  }
+];
+
+export const personaAutoReplies = [
+  "我记下了，听起来你在意稳定感和真诚表达。",
+  "明白，这一面我会记进你的画像里。",
+  "我感觉你不是不爱社交，而是更在意是否合拍。",
+  "你对边界感和节奏的描述很清晰，下一轮匹配会参考。",
+  "听起来你比较珍惜可以慢慢熟悉的人，我会注意筛选这一类。"
+];

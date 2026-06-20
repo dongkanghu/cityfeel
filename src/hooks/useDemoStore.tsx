@@ -9,17 +9,24 @@ import {
 } from "react";
 import {
   cardRecommendations,
+  creditEventsSeed,
   currentUser,
   defaultProfileCard,
   defaultProfileTags,
   groupConversationId,
   groupLocations,
+  initialCreditScore,
   initialGroupMessages,
   initialOneOnOneMessages,
   oneOnOneConversationId,
   oneOnOneUser,
+  personaAutoReplies,
+  personaConversationId,
+  personaSeedMessages,
+  personaTopicPool,
   type CardStatus,
   type ChatMessage,
+  type CreditEvent,
   type Friend,
   type GroupStatus,
   type OneOnOneStatus,
@@ -42,6 +49,10 @@ type DemoState = {
   locationVotes: Record<string, number>;
   selectedLocationId: string | null;
   groupTopicIndex: number;
+  personaMessages: ChatMessage[];
+  personaTopicOffset: number;
+  creditScore: number;
+  creditEvents: CreditEvent[];
 };
 
 type DemoStore = DemoState & {
@@ -62,6 +73,10 @@ type DemoStore = DemoState & {
   restoreDefaultProfileCard: () => void;
   sendMessage: (conversationId: string, content: string, sender?: string) => void;
   addSystemMessage: (conversationId: string, content: string) => void;
+  sendPersonaMessage: (content: string) => void;
+  refreshPersonaTopics: () => void;
+  getPersonaTopics: () => string[];
+  appendCreditEvent: (delta: number, reason: string) => void;
 };
 
 const initialState: DemoState = {
@@ -80,7 +95,11 @@ const initialState: DemoState = {
     groupLocations.map((location) => [location.id, location.votes])
   ),
   selectedLocationId: null,
-  groupTopicIndex: 0
+  groupTopicIndex: 0,
+  personaMessages: personaSeedMessages,
+  personaTopicOffset: 0,
+  creditScore: initialCreditScore,
+  creditEvents: creditEventsSeed
 };
 
 const DemoStoreContext = createContext<DemoStore | null>(null);
@@ -115,7 +134,15 @@ function readStoredState(): DemoState {
       diyProfileCard: {
         ...initialState.diyProfileCard,
         ...parsed.diyProfileCard
-      }
+      },
+      personaMessages:
+        parsed.personaMessages && parsed.personaMessages.length > 0
+          ? parsed.personaMessages
+          : initialState.personaMessages,
+      creditEvents:
+        parsed.creditEvents && parsed.creditEvents.length > 0
+          ? parsed.creditEvents
+          : initialState.creditEvents
     };
   } catch {
     return initialState;
@@ -226,7 +253,17 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             createdAt: nowLabel()
           }
         ]
-      }
+      },
+      creditScore: Math.min(120, current.creditScore + 5),
+      creditEvents: [
+        {
+          id: messageId("ce"),
+          delta: 5,
+          reason: "确认本周 1v1 见面",
+          createdAt: nowLabel()
+        },
+        ...current.creditEvents
+      ].slice(0, 12)
     }));
   }, []);
 
@@ -401,6 +438,66 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     sendMessage(conversationId, content, "system");
   }, [sendMessage]);
 
+  const appendCreditEvent = useCallback((delta: number, reason: string) => {
+    setState((current) => ({
+      ...current,
+      creditScore: Math.max(0, Math.min(120, current.creditScore + delta)),
+      creditEvents: [
+        {
+          id: messageId("ce"),
+          delta,
+          reason,
+          createdAt: nowLabel()
+        },
+        ...current.creditEvents
+      ].slice(0, 12)
+    }));
+  }, []);
+
+  const sendPersonaMessage = useCallback((content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+
+    setState((current) => {
+      const userMsg: ChatMessage = {
+        id: messageId("m_persona_user"),
+        conversationId: personaConversationId,
+        sender: "me",
+        content: trimmed,
+        createdAt: nowLabel()
+      };
+      const replyIndex = current.personaMessages.filter((m) => m.sender === "ai").length;
+      const reply: ChatMessage = {
+        id: messageId("m_persona_ai"),
+        conversationId: personaConversationId,
+        sender: "ai",
+        content: personaAutoReplies[replyIndex % personaAutoReplies.length],
+        createdAt: nowLabel()
+      };
+      const nextProgress = Math.min(100, (current.profileProgress || 0) + 4);
+      return {
+        ...current,
+        personaMessages: [...current.personaMessages, userMsg, reply],
+        profileProgress: nextProgress,
+        onboardingCompleted: current.onboardingCompleted || nextProgress >= 40
+      };
+    });
+  }, []);
+
+  const refreshPersonaTopics = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      personaTopicOffset: (current.personaTopicOffset + 3) % personaTopicPool.length
+    }));
+  }, []);
+
+  const getPersonaTopics = useCallback(() => {
+    const offset = state.personaTopicOffset;
+    return [0, 1, 2].map(
+      (i) => personaTopicPool[(offset + i) % personaTopicPool.length]
+    );
+  }, [state.personaTopicOffset]);
+
   const value = useMemo<DemoStore>(
     () => ({
       ...state,
@@ -420,7 +517,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       saveDiyProfileCard,
       restoreDefaultProfileCard,
       sendMessage,
-      addSystemMessage
+      addSystemMessage,
+      sendPersonaMessage,
+      refreshPersonaTopics,
+      getPersonaTopics,
+      appendCreditEvent
     }),
     [
       state,
@@ -440,7 +541,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       saveDiyProfileCard,
       restoreDefaultProfileCard,
       sendMessage,
-      addSystemMessage
+      addSystemMessage,
+      sendPersonaMessage,
+      refreshPersonaTopics,
+      getPersonaTopics,
+      appendCreditEvent
     ]
   );
 

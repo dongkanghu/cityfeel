@@ -1,194 +1,126 @@
-import { RotateCcw, Save, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { RefreshCcw, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AbstractAvatar } from "../components/common/AbstractAvatar";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
-import { StatusBadge } from "../components/common/StatusBadge";
 import { TagChip } from "../components/common/TagChip";
-import { useToast } from "../components/common/Toast";
 import { TopBar } from "../components/layout/TopBar";
-import { currentUser, profileSummary, type ProfileCard } from "../data/mock";
+import { currentUser, profileSummary } from "../data/mock";
 import { useDemoStore } from "../hooks/useDemoStore";
 
-function parseList(value: string) {
-  return value
-    .split(/[,，、\n]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 6);
+function creditLevel(score: number) {
+  if (score >= 110) return "金牌靠谱";
+  if (score >= 100) return "守约稳定";
+  if (score >= 85) return "正常";
+  return "需注意";
 }
 
 export function ProfilePage() {
-  const { showToast } = useToast();
+  const navigate = useNavigate();
   const {
-    diyProfileCard,
     selectedProfileTags,
     profileProgress,
-    saveDiyProfileCard,
-    restoreDefaultProfileCard
+    onboardingCompleted,
+    creditScore,
+    creditEvents
   } = useDemoStore();
-  const [alias, setAlias] = useState(diyProfileCard.alias);
-  const [bio, setBio] = useState(diyProfileCard.bio);
-  const [tags, setTags] = useState(diyProfileCard.tags.join("、"));
-  const [activityPreference, setActivityPreference] = useState(
-    diyProfileCard.activityPreference.join("、")
-  );
-  const [avoidIntro, setAvoidIntro] = useState(diyProfileCard.avoidIntro);
-
-  useEffect(() => {
-    setAlias(diyProfileCard.alias);
-    setBio(diyProfileCard.bio);
-    setTags(diyProfileCard.tags.join("、"));
-    setActivityPreference(diyProfileCard.activityPreference.join("、"));
-    setAvoidIntro(diyProfileCard.avoidIntro);
-  }, [diyProfileCard]);
-
-  const preview: ProfileCard = {
-    alias,
-    bio,
-    tags: parseList(tags),
-    activityPreference: parseList(activityPreference),
-    avoidIntro
-  };
-
-  const save = () => {
-    saveDiyProfileCard(preview);
-    showToast("匿名卡片已保存");
-  };
-
-  const restore = () => {
-    restoreDefaultProfileCard();
-    showToast("已恢复 AI 默认生成", "info");
-  };
+  const tags = (selectedProfileTags.length ? selectedProfileTags : currentUser.tags).slice(0, 6);
+  const progress = onboardingCompleted
+    ? profileProgress || currentUser.profileCompleteness
+    : profileProgress;
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="画像" subtitle="让 AI 更懂你，也管理别人看到的卡片" />
+      <TopBar title="我" />
 
       <Card className="space-y-4 bg-[#fffaf4]">
-        <div className="flex items-start gap-3">
-          <AbstractAvatar seed={currentUser.avatarSeed} label={preview.alias} size="xl" />
+        <div className="flex items-center gap-3">
+          <AbstractAvatar seed={currentUser.avatarSeed} label={currentUser.alias} size="lg" />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold text-coffee">推荐偏好</p>
-              <StatusBadge tone="quiet">仅用于推荐</StatusBadge>
-            </div>
-            <h1 className="mt-1 text-2xl font-black text-ink">{currentUser.alias}</h1>
-            <p className="mt-1 text-sm text-muted">城市：北京 · 用户均为成人</p>
+            <h1 className="truncate text-xl font-black text-ink">{currentUser.alias}</h1>
+            <p className="mt-1 text-xs text-muted">匿名昵称 · 北京</p>
           </div>
         </div>
+
         <div>
-          <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted">
-            <span>画像完成度</span>
-            <span>{profileProgress || currentUser.profileCompleteness}%</span>
+          <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-muted">
+            <span className="flex items-center gap-1">
+              <Sparkles className="h-3.5 w-3.5 text-coffee" />
+              AI 已了解
+            </span>
+            <span>{progress}%</span>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-oatmeal">
+          <div className="h-2 overflow-hidden rounded-full bg-oatmeal">
             <div
               className="h-full rounded-full bg-gradient-to-r from-coffee via-latte to-sage"
-              style={{ width: `${profileProgress || currentUser.profileCompleteness}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
-        <p className="text-sm leading-relaxed text-muted">{profileSummary}</p>
-        <div className="flex flex-wrap gap-2">
-          {(selectedProfileTags.length ? selectedProfileTags : currentUser.tags)
-            .slice(0, 5)
-            .map((tag) => (
-              <TagChip key={tag} tone="coffee">
-                {tag}
-              </TagChip>
-            ))}
-        </div>
-        <Link to="/onboarding">
-          <Button className="w-full" variant="secondary">
-            继续补充偏好
-          </Button>
-        </Link>
       </Card>
 
-      <Card className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold text-muted">公开卡片预览</p>
-            <h2 className="mt-1 text-xl font-black text-ink">{preview.alias || "未命名"}</h2>
-          </div>
-          <StatusBadge tone="success">别人可见</StatusBadge>
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-coffee">信用分</p>
+          <span className="rounded-full bg-oatmeal px-2 py-0.5 text-[11px] font-bold text-coffee">
+            {creditLevel(creditScore)}
+          </span>
         </div>
-        <p className="text-sm leading-relaxed text-ink">{preview.bio}</p>
-        <div className="flex flex-wrap gap-2">
-          {preview.tags.map((tag, index) => (
+        <div className="flex items-end gap-2">
+          <p className="text-3xl font-black text-ink leading-none">{creditScore}</p>
+          <p className="pb-1 text-xs text-muted">满分 120</p>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-oatmeal">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-moss to-sage"
+            style={{ width: `${Math.min(100, (creditScore / 120) * 100)}%` }}
+          />
+        </div>
+        <ul className="space-y-1.5 pt-1">
+          {creditEvents.slice(0, 3).map((event) => (
+            <li key={event.id} className="flex items-center gap-2 text-xs text-muted">
+              <TrendingUp className="h-3.5 w-3.5 text-coffee" />
+              <span className="flex-1 truncate">{event.reason}</span>
+              <span className="text-[11px]">{event.createdAt}</span>
+              <span
+                className={
+                  event.delta >= 0
+                    ? "w-10 text-right font-bold text-moss"
+                    : "w-10 text-right font-bold text-clay"
+                }
+              >
+                {event.delta >= 0 ? `+${event.delta}` : event.delta}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+
+      <Card className="space-y-3">
+        <p className="text-xs font-semibold text-coffee">AI 这样理解你</p>
+        <p className="text-sm leading-relaxed text-ink">{profileSummary}</p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {tags.map((tag, index) => (
             <TagChip key={tag} tone={index % 2 ? "sage" : "coffee"}>
               {tag}
             </TagChip>
           ))}
         </div>
-        <div className="rounded-[1.2rem] bg-cream p-3">
-          <p className="text-xs font-bold text-coffee">希望被推荐给</p>
-          <p className="mt-1 text-sm leading-relaxed text-muted">
-            {preview.activityPreference.join(" / ") || "低压力社交、稳定沟通、活动型见面"}
-          </p>
-        </div>
       </Card>
 
-      <Card className="space-y-3">
-        <h2 className="text-base font-black text-ink">编辑公开卡片</h2>
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">匿名昵称 · 别人可见</span>
-          <input
-            className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
-            value={alias}
-            onChange={(event) => setAlias(event.target.value)}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">一句话介绍 · 别人可见</span>
-          <textarea
-            className="min-h-20 w-full resize-none rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">我的 3-5 个标签 · 别人可见</span>
-          <input
-            className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
-            value={tags}
-            onChange={(event) => setTags(event.target.value)}
-            placeholder="咖啡聊天、慢热、认真聊天"
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">偏好咖啡活动 · 用于推荐</span>
-          <input
-            className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
-            value={activityPreference}
-            onChange={(event) => setActivityPreference(event.target.value)}
-            placeholder="安静咖啡店、咖啡后轻散步"
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-muted">不希望被如何介绍 · 仅用于推荐</span>
-          <textarea
-            className="min-h-20 w-full resize-none rounded-2xl border border-line bg-cream px-3 py-3 text-sm outline-none focus:border-coffee"
-            value={avoidIntro}
-            onChange={(event) => setAvoidIntro(event.target.value)}
-          />
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" icon={<RotateCcw className="h-4 w-4" />} onClick={restore}>
-            恢复默认
-          </Button>
-          <Button icon={<Save className="h-4 w-4" />} onClick={save}>
-            保存卡片
-          </Button>
-        </div>
-      </Card>
+      <Button
+        className="w-full"
+        variant="secondary"
+        icon={<RefreshCcw className="h-4 w-4" />}
+        onClick={() => navigate("/persona")}
+      >
+        继续和 AI 聊聊
+      </Button>
 
       <Card className="flex items-start gap-3 bg-[#f8fbf7] shadow-none">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-moss" />
         <p className="text-xs leading-relaxed text-muted">
-          匿名卡片不会展示真实姓名、手机号、微信号、详细住址或真人照片。
+          平台不展示真实姓名、联系方式或真人照片，仅成人用户可用。
         </p>
       </Card>
     </div>
