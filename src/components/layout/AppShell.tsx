@@ -6,11 +6,17 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const fullScreenRoutes = new Set(["/onboarding"]);
+const hideBottomNavRoutes = new Set([
+  "/onboarding",
+  "/match/one-on-one",
+  "/match/group",
+  "/cards",
+  "/profile"
+]);
 
 export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
-  const showBottomNav = !fullScreenRoutes.has(location.pathname);
+  const showBottomNav = !hideBottomNavRoutes.has(location.pathname);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#f4dfc4_0,#faf7f2_32%,#f7f3ee_100%)] text-ink">

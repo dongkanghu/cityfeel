@@ -31,7 +31,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="我" />
+      <TopBar title="我" showBack />
 
       <Card className="space-y-4 bg-[#fffaf4]">
         <div className="flex items-center gap-3">

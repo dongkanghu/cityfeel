@@ -1,12 +1,11 @@
-import { Coffee, MessageCircle, Sparkles, User } from "lucide-react";
+import { Coffee, MessageCircle, Sparkles } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../common/utils";
 
 const items = [
   { label: "AI 搭子", path: "/persona", icon: Sparkles },
   { label: "匹配", path: "/home", icon: Coffee, match: "/match", aliases: ["/gatherings", "/cards"] },
-  { label: "消息", path: "/chat", icon: MessageCircle, aliases: ["/friends"] },
-  { label: "我", path: "/profile", icon: User }
+  { label: "消息", path: "/chat", icon: MessageCircle, aliases: ["/friends"] }
 ];
 
 export function MobileBottomNav() {
@@ -14,7 +13,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[430px] border-t border-line bg-white/92 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_40px_rgba(69,49,33,0.10)] backdrop-blur-xl">
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         {items.map((item) => {
           const Icon = item.icon;
           const active =
@@ -25,7 +24,7 @@ export function MobileBottomNav() {
             <NavLink
               key={item.path}
               className={cn(
-                "flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[11px] font-semibold text-muted transition",
+                "flex min-w-0 flex-col items-center gap-1 rounded-2xl px-1.5 py-2 text-[11px] font-semibold text-muted transition",
                 active && "bg-oatmeal text-ink"
               )}
               to={item.path}

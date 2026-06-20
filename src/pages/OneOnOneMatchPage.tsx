@@ -1,29 +1,26 @@
-import { Coffee, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
+import { CalendarDays, Coffee, MapPin, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AbstractAvatar } from "../components/common/AbstractAvatar";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
 import { Modal } from "../components/common/Modal";
 import { StatusBadge } from "../components/common/StatusBadge";
+import { TagChip } from "../components/common/TagChip";
 import { useToast } from "../components/common/Toast";
 import { TopBar } from "../components/layout/TopBar";
-import { ActivityCard } from "../components/match/ActivityCard";
-import { AiReasonCard } from "../components/match/AiReasonCard";
-import { UserProfileCard } from "../components/match/UserProfileCard";
 import { ChatPanel } from "../components/chat/ChatPanel";
 import {
   initialOneOnOneMessages,
   oneOnOneConversationId,
-  oneOnOneUser,
-  safetyNotes
+  oneOnOneUser
 } from "../data/mock";
 import { useDemoStore } from "../hooks/useDemoStore";
 
 const quickReplies = [
   "我建议在地铁站出口集合",
   "可以先咖啡再轻散步",
-  "我们把时间定在 15:00 吧",
-  "我想换一个更安静的地点"
+  "我们把时间定在 15:00 吧"
 ];
 
 function statusLabel(status: string) {
@@ -123,125 +120,87 @@ export function OneOnOneMatchPage() {
     };
   })();
 
+  const canSkip = oneOnOneStatus === "recommended" || oneOnOneStatus === "skipped";
+
   return (
     <div className="space-y-4 pt-1">
-      <TopBar title="1v1 咖啡活动匹配" subtitle="北京 · 每周一次低压力推荐" />
+      <TopBar title="本周 1v1" showBack />
 
       <Card className="space-y-4 bg-[#fffaf4]">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold text-coffee">本周 1v1 咖啡匹配</p>
-            <h1 className="mt-1 text-2xl font-black text-ink">{oneOnOneUser.alias}</h1>
-            <p className="mt-1 text-sm text-muted">周六下午咖啡聊天 · 匹配度 91%</p>
-          </div>
-          <StatusBadge
-            tone={
-              oneOnOneStatus === "confirmed"
-                ? "success"
-                : oneOnOneStatus === "waiting_other"
-                  ? "waiting"
-                  : "ready"
-            }
-          >
-            {statusLabel(oneOnOneStatus)}
-          </StatusBadge>
-        </div>
-        <div className="grid grid-cols-3 gap-2 rounded-[1.25rem] bg-white p-2 text-center">
-          <div>
-            <p className="text-lg font-black text-ink">91%</p>
-            <p className="text-[11px] text-muted">匹配度</p>
-          </div>
-          <div>
-            <p className="text-lg font-black text-ink">60-90</p>
-            <p className="text-[11px] text-muted">分钟</p>
-          </div>
-          <div>
-            <p className="text-lg font-black text-ink">北京</p>
-            <p className="text-[11px] text-muted">默认城市</p>
+        <div className="flex items-center gap-3">
+          <AbstractAvatar seed={oneOnOneUser.avatarSeed} label={oneOnOneUser.alias} size="lg" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-xl font-black text-ink">{oneOnOneUser.alias}</h1>
+              <StatusBadge
+                tone={
+                  oneOnOneStatus === "confirmed"
+                    ? "success"
+                    : oneOnOneStatus === "waiting_other"
+                      ? "waiting"
+                      : "ready"
+                }
+              >
+                {statusLabel(oneOnOneStatus)}
+              </StatusBadge>
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              {oneOnOneUser.ageRange} · 北京 · 匹配度 91%
+            </p>
           </div>
         </div>
-        <div className="grid gap-2">
-          <Button
-            className="w-full"
-            loading={primaryButton.loading}
-            disabled={primaryButton.disabled}
-            icon={<Coffee className="h-4 w-4" />}
-            onClick={primaryButton.onClick}
+        <Button
+          className="w-full"
+          loading={primaryButton.loading}
+          disabled={primaryButton.disabled}
+          icon={<Coffee className="h-4 w-4" />}
+          onClick={primaryButton.onClick}
+        >
+          {primaryButton.label}
+        </Button>
+        {canSkip ? (
+          <button
+            type="button"
+            onClick={() => {
+              skipOneOnOne();
+              showToast("已记录暂时跳过，仍可稍后重新同意", "info");
+            }}
+            className="-mt-1 w-full text-center text-xs text-muted underline-offset-2 hover:underline"
           >
-            {primaryButton.label}
-          </Button>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="secondary"
-              icon={<EyeOff className="h-4 w-4" />}
-              disabled={oneOnOneStatus !== "recommended" && oneOnOneStatus !== "skipped"}
-              onClick={() => {
-                skipOneOnOne();
-                showToast("已记录暂时跳过，仍可稍后重新同意", "info");
-              }}
-            >
-              暂时跳过
-            </Button>
-            <Button
-              variant="outline"
-              icon={<MessageCircle className="h-4 w-4" />}
-              onClick={() => showToast("AI 推荐理由已在下方展开", "info")}
-            >
-              推荐理由
-            </Button>
-          </div>
+            暂时跳过这一位
+          </button>
+        ) : null}
+      </Card>
+
+      <Card className="space-y-3">
+        <p className="text-sm leading-relaxed text-ink">{oneOnOneUser.bio}</p>
+        <div className="flex flex-wrap gap-2">
+          {oneOnOneUser.tags.slice(0, 4).map((tag, index) => (
+            <TagChip key={tag} tone={index % 2 ? "sage" : "coffee"}>
+              {tag}
+            </TagChip>
+          ))}
+        </div>
+        <div className="rounded-[1.2rem] bg-cream p-3">
+          <p className="text-xs font-bold text-coffee">AI 推荐理由</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{oneOnOneUser.aiReason}</p>
         </div>
       </Card>
 
-      <UserProfileCard user={oneOnOneUser} badge="25-29 · 北京" />
-      <AiReasonCard reason={oneOnOneUser.aiReason} />
-      <ActivityCard
-        title="咖啡聊天"
-        time="本周六 15:00 - 16:30"
-        location="三里屯、亮马河、五道营、国贸商圈"
-      />
-
-      <Card className="space-y-2 bg-[#f8fbf7]">
-        <div className="flex items-center gap-2 text-sm font-black text-moss">
-          <ShieldCheck className="h-4 w-4" />
-          安全与匿名提示
+      <Card className="space-y-2">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-coffee" />
+          <h2 className="text-sm font-black text-ink">本周咖啡建议</h2>
         </div>
-        <div className="space-y-1">
-          {safetyNotes.map((note) => (
-            <p key={note} className="text-xs leading-relaxed text-muted">
-              {note}
-            </p>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <Button variant="secondary" onClick={() => showToast("已记录屏蔽反馈", "info")}>
-            屏蔽
-          </Button>
-          <Button variant="danger" onClick={() => showToast("已记录举报入口点击", "info")}>
-            举报
-          </Button>
+        <p className="text-sm text-ink">本周六 15:00 - 16:30</p>
+        <div className="flex items-start gap-1.5 text-xs text-muted">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>三里屯 / 亮马河 / 五道营 / 国贸 任选，确认后由你们聊天商定</span>
         </div>
       </Card>
 
       {canChat ? (
         <>
-          <Card className="space-y-3">
-            <h2 className="text-base font-black text-ink">当前进度</h2>
-            <div className="grid grid-cols-4 gap-1 text-center text-[11px] font-semibold text-muted">
-              {["已成为好友", "确认地点", "确认活动", "活动当天"].map((step, index) => (
-                <div
-                  key={step}
-                  className={`rounded-2xl px-1.5 py-2 ${
-                    oneOnOneStatus === "confirmed" || index < 2
-                      ? "bg-[#e4f2ea] text-[#2f6d50]"
-                      : "bg-cream"
-                  }`}
-                >
-                  {step}
-                </div>
-              ))}
-            </div>
-          </Card>
           <ChatPanel
             title="集合地点沟通"
             subtitle={
@@ -263,6 +222,11 @@ export function OneOnOneMatchPage() {
           </Button>
         </>
       ) : null}
+
+      <div className="flex items-start gap-2 px-1 pb-1 text-[11px] leading-relaxed text-muted">
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-moss" />
+        <span>平台匿名，请选择公共场所首次见面，不展示真实姓名与联系方式。</span>
+      </div>
 
       <Modal
         open={confirmOpen}
